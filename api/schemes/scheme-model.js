@@ -38,7 +38,7 @@ async function findById(scheme_id) { // EXERCISE B
     const results = { steps: [] };
     results.scheme_id = scheme_id;
     results.scheme_name = rows[0].scheme_name;
-    
+
     if (rows[0].step_id !== null){
       rows.forEach( x => {
         results.steps.push({ step_id: x.step_id, step_number: x.step_number, instructions: x.instructions });
@@ -114,8 +114,33 @@ async function findById(scheme_id) { // EXERCISE B
 }
 
 async function findSteps(scheme_id) { // EXERCISE C
+  const rows = await db('schemes as sc')
+    .leftJoin('steps as st', 'sc.scheme_id', 'st.scheme_id')
+    .select('sc.scheme_name', 'st.step_id', 'st.step_number', 'st.instructions')
+    .where('sc.scheme_id', scheme_id)
+    .orderBy('st.step_number')  
+
+  if (rows[0].step_id === null){
+    return [];
+  } else {
+    return rows;
+  }
+
+  
   /*
-    1C- Build a query in Knex that returns the following data.
+    
+    SELECT
+      sc.scheme_name,
+      st.step_id,
+      st.step_number,
+      st.instructions
+    FROM schemes as sc
+    LEFT JOIN steps as st
+        ON sc.scheme_id = st.scheme_id
+    WHERE sc.scheme_id = 1
+    ORDER BY st.step_number ASC;
+  
+  1C- Build a query in Knex that returns the following data.
     The steps should be sorted by step_number, and the array
     should be empty if there are no steps for the scheme:
 
@@ -139,15 +164,39 @@ async function findSteps(scheme_id) { // EXERCISE C
 async function add(scheme) { // EXERCISE D
   /*
     1D- This function creates a new scheme and resolves to _the newly created scheme_.
+    // INSERT INTO schemes (scheme_name)
+    // values ('SLASH AND BURN');
   */
+  const [ newRowId ] = await db('schemes') // Returns an array w. a single value that represents the new ID; destructure to get the number
+    .insert(scheme)
+  const newRow = findById(newRowId)
+  return newRow;
+  // const newRow = await db('schemes as sc').select('sc.scheme_id, sc.scheme_name')
 }
 
 async function addStep(scheme_id, step) { // EXERCISE E
+
   /*
     1E- This function adds a step to the scheme with the given `scheme_id`
     and resolves to _all the steps_ belonging to the given `scheme_id`,
     including the newly created one.
+
+    INSERT INTO steps (step_number, instructions, scheme_id)
+    VALUES (2, 'speak softly', 8)
+
   */
+
+  // Alternate: Cleaner than what I have below
+  // step.scheme_id = scheme_id
+  // await db('steps').insert(step)
+
+
+  await db('steps')
+    .insert({ scheme_id: scheme_id, step_number: step.step_number, instructions: step.instructions })
+  const result = findSteps(scheme_id)
+  console.log('RESULT: ', result);
+  return result;
+
 }
 
 module.exports = {

@@ -32,7 +32,7 @@ router.get('/', (req, res, next) => {
 })
 
 /*
-  [GET] /api/schemes/2
+1/s[GET] /api/schemes/2
 
   response:
   {
