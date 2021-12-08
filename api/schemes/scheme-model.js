@@ -36,7 +36,7 @@ async function findById(scheme_id) { // EXERCISE B
     .orderBy('st.step_number')  
 
     const results = { steps: [] };
-    results.scheme_id = scheme_id;
+    results.scheme_id = Number(scheme_id);
     results.scheme_name = rows[0].scheme_name;
 
     if (rows[0].step_id !== null){
@@ -190,7 +190,6 @@ async function addStep(scheme_id, step) { // EXERCISE E
   // step.scheme_id = scheme_id
   // await db('steps').insert(step)
 
-
   await db('steps')
     .insert({ scheme_id: scheme_id, step_number: step.step_number, instructions: step.instructions })
   const result = findSteps(scheme_id)
@@ -199,10 +198,21 @@ async function addStep(scheme_id, step) { // EXERCISE E
 
 }
 
+async function checkSchemeIdExists (scheme_id) {
+  const check = await db('schemes')
+    .where('scheme_id', scheme_id);
+  if (check.length === 1){
+    return true;
+  } else {
+    return false;
+  }
+}
+
 module.exports = {
   find,
   findById,
   findSteps,
   add,
   addStep,
+  checkSchemeIdExists,
 }
